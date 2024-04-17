@@ -9,11 +9,14 @@ jobs:
     runs-on: ubuntu-latest
     concurrency: deploy-group # optional: ensure only one action runs at a time
     steps:
-      - uses: actions/checkout@v4
-      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name:
+        uses: superfly/flyctl-actions/setup-flyctl@master
         with:
           version: 0.2.34
-      - working-directory: ../../server
-      - run: flyctl deploy --remote-only
+        working-directory: ../../server
+        run: flyctl deploy --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

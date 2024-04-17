@@ -10,6 +10,6 @@ jobs:
       - name: Migrate
         uses: vovavc/migrate-github-action@v0.2.1
         with:
-            path: ../../server/db/schema
-            database: postgres://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST }}:5432/${{ secrets.DB_NAME }}?sslmode=disable
-            command: up
+          path: ./server/db/schema
+          database: postgres://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST }}:5432/${{ secrets.DB_NAME }}?sslmode=disable
+          command: up
