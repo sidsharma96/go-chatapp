@@ -24,7 +24,7 @@ type Server struct {
 func NewServer(port string) Server {
 	godotenv.Load(".env")
 
-	dbUrl := os.Getenv("DB_URL")
+	dbUrl := os.Getenv("DATABASE_URL")
 	if dbUrl == "" {
 		log.Fatal("Database url is not found in the environment!")
 	}

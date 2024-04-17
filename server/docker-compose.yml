@@ -1,0 +1,65 @@
+version: '3.8'
+services:
+  go-chat:
+    container_name: go-chat
+    image: docker-go-chat
+    build: .
+    environment:
+      - DB_URL=postgres://postgres:secret@postgres_db:5432/chatapp?sslmode=disable
+    ports:
+      - '4269:4269'
+    depends_on:
+      - migrate
+
+  postgres_db:
+    container_name: go-chatapp-postgres
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PW}
+      - POSTGRES_DB=${POSTGRES_DB}
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: pg_isready -U postgres -d chatapp
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  migrate:
+    image: migrate/migrate
+    container_name: go-migrate
+    volumes:
+      - ./db/schema:/migrations
+    command:
+      [
+        '-path',
+        '/migrations',
+        '-database',
+        'postgres://postgres:secret@postgres_db:5432/chatapp?sslmode=disable',
+        'up',
+      ]
+    links:
+      - postgres_db
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin4_container
+    restart: always
+    ports:
+      - '8888:80'
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_MAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PW}
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
