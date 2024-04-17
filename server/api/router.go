@@ -10,6 +10,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/sidsharma96/chatapp-backend/db/sqlc"
@@ -34,6 +37,18 @@ func NewServer(port string) Server {
 		log.Fatal("Cannot connect to database - ", dbErr)
 	}
 
+	driver, driverErr := postgres.WithInstance(conn, &postgres.Config{})
+	if driverErr != nil {
+		log.Fatal("Error opening postgres driver - ", driverErr)
+	}
+	migration, mErr := migrate.NewWithDatabaseInstance("file://db/schema", "postgres", driver)
+	if mErr != nil {
+		log.Fatal("Error opening migrate instance - ", mErr)
+	}
+	upErr := migration.Up()
+	if upErr != nil && upErr != migrate.ErrNoChange {
+		log.Fatal("Error migrating up - ", upErr)
+	}
 	queries := sqlc.New(conn)
 
 	defaultRouter := chi.NewRouter()
