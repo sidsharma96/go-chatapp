@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/websocket"
+	db "github.com/sidsharma96/chatapp-backend/db/sqlc"
 )
 
 type Client struct {
@@ -69,13 +70,13 @@ func NewPool(server *Server) *Pool {
 	}
 }
 
-func (p *Pool) router(server *Server) {
+func (p *Pool) startRouter() {
 	poolRouter := chi.NewRouter()
-	server.ChiRouter.Mount("/pool", poolRouter)
-	poolRouter.Post("/createRoom", p.CreateRoom)
+	p.Server.ChiRouter.Mount("/pool", poolRouter)
+	poolRouter.Post("/createRoom", p.Server.middlewareAuth(p.CreateRoom))
 	poolRouter.Get("/joinRoom/{roomId}", p.JoinRoom)
-	poolRouter.Get("/getRooms", p.GetRooms)
-	poolRouter.Get("/getClients/{roomId}", p.GetClients)
+	poolRouter.Get("/getRooms", p.Server.middlewareAuth(p.GetRooms))
+	poolRouter.Get("/getClients/{roomId}", p.Server.middlewareAuth(p.GetClients))
 }
 
 func (p *Pool) Start() {
@@ -116,7 +117,7 @@ func (p *Pool) Start() {
 	}
 }
 
-func (p *Pool) CreateRoom(w http.ResponseWriter, r *http.Request) {
+func (p *Pool) CreateRoom(w http.ResponseWriter, r *http.Request, user db.User) {
 	req := CreateRoomReq{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		errorHandler(w, http.StatusBadRequest, fmt.Sprintf("Error decoding %v", err))
@@ -138,7 +139,6 @@ func (p *Pool) JoinRoom(w http.ResponseWriter, r *http.Request) {
 		errorHandler(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
 	roomID := chi.URLParam(r, "roomId")
 	username := r.URL.Query().Get("username")
 
@@ -154,7 +154,7 @@ func (p *Pool) JoinRoom(w http.ResponseWriter, r *http.Request) {
 	client.readMessage(p)
 }
 
-func (p *Pool) GetRooms(w http.ResponseWriter, r *http.Request) {
+func (p *Pool) GetRooms(w http.ResponseWriter, r *http.Request, user db.User) {
 	rooms := make([]RoomRes, 0)
 	for _, r := range p.Rooms {
 		rooms = append(rooms, RoomRes{
@@ -165,7 +165,7 @@ func (p *Pool) GetRooms(w http.ResponseWriter, r *http.Request) {
 	jsonHandler(w, http.StatusOK, rooms)
 }
 
-func (p *Pool) GetClients(w http.ResponseWriter, r *http.Request) {
+func (p *Pool) GetClients(w http.ResponseWriter, r *http.Request, user db.User) {
 	var clients []ClientRes
 	roomId := chi.URLParam(r, "roomId")
 
@@ -215,6 +215,7 @@ func (c *Client) readMessage(pool *Pool) {
 				err,
 				websocket.CloseGoingAway,
 				websocket.CloseNoStatusReceived,
+				websocket.CloseNormalClosure,
 				websocket.CloseAbnormalClosure) {
 				log.Printf("error: %v", err)
 			}

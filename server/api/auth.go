@@ -48,6 +48,11 @@ func (a *Auth) register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if userParams.Username == "" || userParams.Password == "" {
+		errorHandler(w, http.StatusBadRequest, fmt.Sprintln("Username and password cannot be empty!"))
+		return
+	}
+
 	hashedPassword, err := utils.GenerateHashedPassword(userParams.Password)
 	if err != nil {
 		errorHandler(w, http.StatusInternalServerError, fmt.Sprint(err.Error()))
@@ -71,6 +76,7 @@ func (a *Auth) register(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		errorHandler(w, http.StatusInternalServerError, fmt.Sprint(err.Error()))
+		return
 	}
 	jsonHandler(w, http.StatusOK, UserResponse{}.toUserResponse(user))
 }
@@ -79,6 +85,11 @@ func (a *Auth) login(w http.ResponseWriter, r *http.Request) {
 	userParams := UserParams{}
 	if err := json.NewDecoder(r.Body).Decode(&userParams); err != nil {
 		errorHandler(w, http.StatusBadRequest, fmt.Sprintf("Error decoding %v", err))
+		return
+	}
+
+	if userParams.Username == "" || userParams.Password == "" {
+		errorHandler(w, http.StatusBadRequest, "Username and password cannot be empty!")
 		return
 	}
 

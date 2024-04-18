@@ -82,7 +82,7 @@ func (s *Server) Start() {
 
 	pool := NewPool(s)
 	go pool.Start()
-	pool.router(s)
+	pool.startRouter()
 
 	fmt.Printf("Running server on port: %s", s.HttpServer.Addr)
 	err := s.HttpServer.ListenAndServe()
