@@ -127,6 +127,7 @@ func (a *Auth) login(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		Expires:  time.Now().Add(time.Hour * 12),
 		HttpOnly: true,
+		Secure:   true,
 		SameSite: http.SameSiteNoneMode,
 	})
 
