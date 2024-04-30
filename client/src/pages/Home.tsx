@@ -1,20 +1,32 @@
-import { JSXElement, createSignal, For } from 'solid-js';
+import { JSXElement, createSignal, For, createEffect } from 'solid-js';
 import RoomCard from '../components/RoomCard';
 import Navbar from '../components/Navbar';
-import FetchRandomAvatarImage from '../utils/RandomAvatar';
 import CreateRoomCard from '../components/CreateRoomCard';
 import ValidateRoomName from '../utils/RoomnameValidator';
-
-type Room = {
-  id: string;
-  imgSrc: string;
-  name: string;
-};
+import { CreateRoom, FetchRooms, RoomResponse } from '../utils/FetchRooms';
+import { useNavigate } from '@solidjs/router';
+import { CredentialError } from '../utils/CredentialValidator';
 
 export default function Home(): JSXElement {
+  const navigate = useNavigate();
   const [roomName, setRoomName] = createSignal<string>('');
-  const [roomCount, setRoomCount] = createSignal<Room[]>([]);
+  const [roomCount, setRoomCount] = createSignal<RoomResponse[]>([]);
   const [roomErr, setRoomErr] = createSignal<string>('');
+
+  createEffect(() => {
+    FetchRooms().then((rooms) => {
+      if (rooms != undefined && rooms.length > 0) {
+        if (rooms === CredentialError.unauthenticatedError) {
+          navigate('/login', { replace: true, state: { err: rooms } });
+          return;
+        } else if (rooms === CredentialError.catchAllError) {
+          setRoomErr(rooms);
+        } else {
+          setRoomCount(rooms);
+        }
+      }
+    });
+  });
 
   const createRoomChangeEvent = (
     e: Event & {
@@ -26,7 +38,7 @@ export default function Home(): JSXElement {
     setRoomName(e.target.value);
   };
 
-  const createRoomHandleClick = () => {
+  const createRoomHandleClick = async () => {
     const roomNameValidation: string = ValidateRoomName(
       roomName(),
       roomCount()
@@ -34,13 +46,16 @@ export default function Home(): JSXElement {
     if (roomNameValidation.length > 0) {
       setRoomErr(roomNameValidation);
     } else if (roomCount().length < 6) {
-      var newRoom: Room = {
-        id: crypto.randomUUID(),
-        imgSrc: FetchRandomAvatarImage(),
-        name: roomName(),
-      };
-      setRoomCount((roomCount) => [...roomCount, newRoom]);
-      setRoomErr('');
+      const createCall = await CreateRoom(crypto.randomUUID(), roomName());
+      if (createCall === CredentialError.unauthenticatedError) {
+        navigate('/login', { replace: true, state: { err: createCall } });
+        return;
+      } else if (createCall === CredentialError.catchAllError) {
+        setRoomErr(createCall);
+      } else {
+        setRoomCount((roomCount) => [...roomCount, createCall]);
+        setRoomErr('');
+      }
     }
   };
 

@@ -5,6 +5,8 @@ export enum CredentialError {
   passwordCharError = 'Password can only be letters/numbers',
   emptyError = 'Username/password cannot be empty',
   lengthError = 'Username/password cannot be more than 10 characters',
+  unauthenticatedError = 'Invalid session. Please login again',
+  catchAllError = 'Something went wrong, please try again.',
 }
 
 export default function ValidateCredentials(

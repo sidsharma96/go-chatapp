@@ -1,8 +1,43 @@
-import { JSXElement } from 'solid-js';
+import { A, useNavigate } from '@solidjs/router';
+import { JSXElement, useContext } from 'solid-js';
+import { LogoutUrl } from '../constants/UrlConstants';
+import { WebsocketContext } from '../context/WebsocketContextProvider';
+
+const fetchLogout = async () => {
+  try {
+    const response = await fetch(LogoutUrl, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      credentials: 'include',
+    });
+    await response.json();
+  } catch (err) {
+    console.log(err);
+  }
+};
 
 export default function Navbar(): JSXElement {
+  const { conn, setConn } = useContext(WebsocketContext);
+  const navigate = useNavigate();
+
+  const clickHandler = () => {
+    if (conn() != null) {
+      conn().close();
+      setConn(null);
+    }
+  };
+
+  const logoutHandler = async (e) => {
+    e.preventDefault();
+    await fetchLogout();
+    clickHandler();
+    navigate('/login', { replace: true });
+  };
+
   return (
-    <nav class='bg-white border-gray-200 dark:bg-gray-900'>
+    <nav class='bg-white w-screen border-gray-200 dark:bg-gray-900'>
       <div class='flex flex-wrap items-center justify-between mx-4 p-4'>
         <div class='flex items-center space-x-3 rtl:space-x-reverse'>
           <img
@@ -17,28 +52,31 @@ export default function Navbar(): JSXElement {
         <div class='block px-2' id='navbar-default'>
           <ul class='font-medium flex p-0 mt-4 rounded-lg bg-white space-x-8 dark:bg-gray-800 dark:border-gray-700'>
             <li>
-              <a
+              <A
                 href='/'
+                onClick={clickHandler}
                 class='block rounded text-black dark:text-white md:dark:text-blue-500'
               >
                 Home
-              </a>
+              </A>
             </li>
             <li>
-              <a
-                href='#'
+              <A
+                href='/profile'
+                onClick={clickHandler}
                 class='block rounded text-black dark:text-white md:dark:text-blue-500'
               >
                 My Profile
-              </a>
+              </A>
             </li>
             <li>
-              <a
-                href='#'
+              <A
+                href=''
                 class='block rounded text-black dark:text-white md:dark:text-blue-500'
+                onClick={logoutHandler}
               >
                 Logout
-              </a>
+              </A>
             </li>
           </ul>
         </div>

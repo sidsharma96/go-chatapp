@@ -1,5 +1,4 @@
-import { createSignal } from 'solid-js';
-import { LoginUrl, SignupUrl } from '../constants/urlConstants';
+import { LoginUrl, SignupUrl } from '../constants/UrlConstants';
 import { CredentialError } from './CredentialValidator';
 
 export default async function FetchCredentials(
@@ -22,6 +21,7 @@ const fetchData = async (url: string, username: string, password: string) => {
       headers: {
         'content-type': 'application/json',
       },
+      credentials: 'include',
       body: JSON.stringify({
         username: username,
         password: password,

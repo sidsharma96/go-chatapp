@@ -1,17 +1,28 @@
-import { Accessor, JSXElement, Show, createSignal } from 'solid-js';
+import { JSXElement, Show, createSignal, onMount } from 'solid-js';
 import ValidateCredentials from '../utils/CredentialValidator';
-import { A, useNavigate } from '@solidjs/router';
+import { A, useLocation, useNavigate } from '@solidjs/router';
 import FetchCredentials from '../utils/FetchCredentials';
 
 type LoginCardProps = {
   isLogin: boolean;
 };
 
+type LoginStateError = {
+  err: string;
+};
+
 export default function LoginCard({ isLogin }: LoginCardProps): JSXElement {
   const [username, setUsername] = createSignal<string>('');
   const [password, setPassword] = createSignal<string>('');
   const [validationError, setValidationError] = createSignal<string>('');
+  const locationState = useLocation().state as LoginStateError;
   const navigate = useNavigate();
+
+  onMount(() => {
+    if (locationState?.err?.length > 0) {
+      setValidationError(locationState.err);
+    }
+  });
 
   const onUsernameChangeHandler = (
     e: Event & {
@@ -50,12 +61,6 @@ export default function LoginCard({ isLogin }: LoginCardProps): JSXElement {
       }
     }
   };
-
-  function getPath({ navigate, location }) {
-    // navigate is the result of calling useNavigate(); location is the result of calling useLocation().
-    // You can use those to dynamically determine a path to navigate to
-    return '/signup';
-  }
 
   return (
     <div class='flex items-center justify-center h-screen'>
@@ -106,10 +111,9 @@ export default function LoginCard({ isLogin }: LoginCardProps): JSXElement {
           Sign in
         </button>
         <Show when={isLogin}>
-          <div class='mt-5 flex justify-between text-sm text-gray-600'>
-            <a href='/'>Forgot password?</a>
+          <div class='mt-5 flex justify-end text-sm text-gray-600'>
             <A href='/signup' activeClass='underlined'>
-              Sign up
+              Sign up for GopherChat
             </A>
           </div>
         </Show>

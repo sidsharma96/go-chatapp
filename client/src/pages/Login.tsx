@@ -1,4 +1,4 @@
-import { createSignal, type JSXElement } from 'solid-js';
+import { type JSXElement } from 'solid-js';
 import LoginCard from '../components/LoginCard';
 
 export default function Login(): JSXElement {
