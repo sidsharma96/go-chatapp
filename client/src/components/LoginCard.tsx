@@ -23,10 +23,7 @@ export default function LoginCard({ isLogin }: LoginCardProps): JSXElement {
   onMount(() => {
     if (locationState?.err?.length > 0) {
       setValidationError(locationState.err);
-    }
-
-    if (storage().getItem('authentication') != null) {
-      console.log('SOMEHOW I REACHED HERE');
+    } else if (storage().getItem('authentication') != null) {
       navigate('/');
       return;
     }
