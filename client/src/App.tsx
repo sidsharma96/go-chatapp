@@ -25,7 +25,6 @@ const App: Component = () => {
           <Route path='/profile' component={Profile}></Route>
           <Route path='/chat/:name' component={Chat}></Route>
           <Route path='/' component={Home}></Route>
-          <Route path={'*'} component={Login} />
         </Router>
       </WebSocketContextProvider>
     </AuthContextProvider>
