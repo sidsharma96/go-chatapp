@@ -12,6 +12,7 @@ import { useLocation, useNavigate } from '@solidjs/router';
 import ChatMessage from '../components/ChatMessage';
 import FetchUsersInRoom from '../utils/FetchUsersInRoom';
 import { CredentialError } from '../utils/CredentialValidator';
+import { AuthContext } from '../context/AuthContextProvider';
 
 export type Message = {
   content: string;
@@ -31,7 +32,8 @@ export default function Chat(): JSXElement {
   const navigate = useNavigate();
   const locationState = useLocation().state as ChatUser;
   let inputRef: HTMLInputElement;
-  const { conn, setConn } = useContext(WebsocketContext);
+  const { conn } = useContext(WebsocketContext);
+  const { storage } = useContext(AuthContext);
 
   onMount(() => {
     if (locationState?.username?.length > 0) {
@@ -40,10 +42,15 @@ export default function Chat(): JSXElement {
   });
 
   createEffect(() => {
-    if (conn() === null) {
+    if (storage().getItem('authentication') == null) {
+      navigate('/login', { replace: true });
+      return;
+    }
+    if (conn() == null) {
       navigate('/');
       return;
     }
+
     const roomId: string = conn().url.split('/')[5].split('?')[0];
     FetchUsersInRoom(roomId).then((data) => {
       if (

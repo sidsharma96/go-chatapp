@@ -1,7 +1,8 @@
-import { JSXElement, Show, createSignal, onMount } from 'solid-js';
+import { JSXElement, Show, createSignal, onMount, useContext } from 'solid-js';
 import ValidateCredentials from '../utils/CredentialValidator';
 import { A, useLocation, useNavigate } from '@solidjs/router';
 import FetchCredentials from '../utils/FetchCredentials';
+import { AuthContext } from '../context/AuthContextProvider';
 
 type LoginCardProps = {
   isLogin: boolean;
@@ -16,11 +17,18 @@ export default function LoginCard({ isLogin }: LoginCardProps): JSXElement {
   const [password, setPassword] = createSignal<string>('');
   const [validationError, setValidationError] = createSignal<string>('');
   const locationState = useLocation().state as LoginStateError;
+  const { storage } = useContext(AuthContext);
   const navigate = useNavigate();
 
   onMount(() => {
     if (locationState?.err?.length > 0) {
       setValidationError(locationState.err);
+    }
+
+    if (storage().getItem('authentication') != null) {
+      console.log('SOMEHOW I REACHED HERE');
+      navigate('/');
+      return;
     }
   });
 
@@ -55,7 +63,9 @@ export default function LoginCard({ isLogin }: LoginCardProps): JSXElement {
     } else {
       const getCred = await FetchCredentials(isLogin, username(), password());
       if (getCred == '') {
+        window.localStorage.setItem('authentication', 'true');
         navigate('/');
+        return;
       } else {
         setValidationError(getCred);
       }

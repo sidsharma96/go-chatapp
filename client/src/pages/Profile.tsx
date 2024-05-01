@@ -1,14 +1,29 @@
-import { JSXElement, Show, createSignal } from 'solid-js';
+import {
+  JSXElement,
+  Show,
+  createEffect,
+  createSignal,
+  useContext,
+} from 'solid-js';
 import Navbar from '../components/Navbar';
 import FetchUserProfile from '../utils/FetchUserProfile';
 import { useNavigate } from '@solidjs/router';
 import FetchProfileAvatarImage from '../utils/ProfileAvatar';
+import { AuthContext } from '../context/AuthContextProvider';
 
 export default function Profile(): JSXElement {
   const navigate = useNavigate();
   const [username, setUsername] = createSignal<string>();
   const [createdAt, setCreatedAt] = createSignal<string>();
   const [imgSrc, setImgSrc] = createSignal<string>('');
+  const { storage } = useContext(AuthContext);
+
+  createEffect(() => {
+    if (storage().getItem('authentication') == null) {
+      navigate('/login', { replace: true });
+      return;
+    }
+  });
 
   FetchUserProfile().then((profile) => {
     if (profile.error != '') {

@@ -1,4 +1,10 @@
-import { JSXElement, createSignal, For, createEffect } from 'solid-js';
+import {
+  JSXElement,
+  createSignal,
+  For,
+  createEffect,
+  useContext,
+} from 'solid-js';
 import RoomCard from '../components/RoomCard';
 import Navbar from '../components/Navbar';
 import CreateRoomCard from '../components/CreateRoomCard';
@@ -6,14 +12,21 @@ import ValidateRoomName from '../utils/RoomnameValidator';
 import { CreateRoom, FetchRooms, RoomResponse } from '../utils/FetchRooms';
 import { useNavigate } from '@solidjs/router';
 import { CredentialError } from '../utils/CredentialValidator';
+import { AuthContext } from '../context/AuthContextProvider';
 
 export default function Home(): JSXElement {
   const navigate = useNavigate();
   const [roomName, setRoomName] = createSignal<string>('');
   const [roomCount, setRoomCount] = createSignal<RoomResponse[]>([]);
   const [roomErr, setRoomErr] = createSignal<string>('');
+  const { storage } = useContext(AuthContext);
 
   createEffect(() => {
+    if (storage().getItem('authentication') == null) {
+      navigate('/login', { replace: true });
+      return;
+    }
+
     FetchRooms().then((rooms) => {
       if (rooms != undefined && rooms.length > 0) {
         if (rooms === CredentialError.unauthenticatedError) {

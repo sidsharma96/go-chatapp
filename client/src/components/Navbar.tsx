@@ -2,6 +2,7 @@ import { A, useNavigate } from '@solidjs/router';
 import { JSXElement, useContext } from 'solid-js';
 import { LogoutUrl } from '../constants/UrlConstants';
 import { WebsocketContext } from '../context/WebsocketContextProvider';
+import { AuthContext } from '../context/AuthContextProvider';
 
 const fetchLogout = async () => {
   try {
@@ -20,20 +21,24 @@ const fetchLogout = async () => {
 
 export default function Navbar(): JSXElement {
   const { conn, setConn } = useContext(WebsocketContext);
+  const { storage } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const clickHandler = () => {
+  const connCloseHandler = () => {
     if (conn() != null) {
       conn().close();
       setConn(null);
     }
   };
 
-  const logoutHandler = async (e) => {
+  const logoutHandler = (e) => {
     e.preventDefault();
-    await fetchLogout();
-    clickHandler();
-    navigate('/login', { replace: true });
+    window.localStorage.clear();
+    connCloseHandler();
+    fetchLogout().then(() => {
+      navigate('/login', { replace: true });
+      return;
+    });
   };
 
   return (
@@ -54,7 +59,7 @@ export default function Navbar(): JSXElement {
             <li>
               <A
                 href='/'
-                onClick={clickHandler}
+                onClick={connCloseHandler}
                 class='block rounded text-black dark:text-white md:dark:text-blue-500'
               >
                 Home
@@ -63,20 +68,20 @@ export default function Navbar(): JSXElement {
             <li>
               <A
                 href='/profile'
-                onClick={clickHandler}
+                onClick={connCloseHandler}
                 class='block rounded text-black dark:text-white md:dark:text-blue-500'
               >
                 My Profile
               </A>
             </li>
             <li>
-              <A
-                href=''
+              <a
+                href='/login'
                 class='block rounded text-black dark:text-white md:dark:text-blue-500'
                 onClick={logoutHandler}
               >
                 Logout
-              </A>
+              </a>
             </li>
           </ul>
         </div>
